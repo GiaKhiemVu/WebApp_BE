@@ -1,0 +1,11 @@
+CREATE TABLE PersonalInfo (
+    UserId INT AUTO_INCREMENT PRIMARY KEY,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    Age INT,
+    Gender VARCHAR(10),
+    Gmail VARCHAR(100),
+    PhoneNumber VARCHAR(20),
+    LoginId INT,
+    FOREIGN KEY (LoginId) REFERENCES loginInfo(loginId)
+);
