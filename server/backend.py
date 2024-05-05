@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import dbAction as db
 from flask_mysqldb import MySQL
 import os
 from dotenv import load_dotenv
 from getToken import getToken
 from flask_cors import CORS
+import json
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT'))
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 mysql = MySQL(app)
 
@@ -31,15 +32,11 @@ def database():
 
 @app.route('/{}/api/token'.format(ver), methods=['GET'])
 def token():
-    return getToken('tnta')
-
-@app.route('/{}/api/user'.format(ver), methods=['GET'])
-def user():
-    userData = db.get_user_by_account('huyton')
-    return {
-        'message': 'success',
-        'data': userData,
-    }
+    userData = db.get_loginInfo_by_account('123')
+    personalData = db.get_personalInfo_by_loginId(userData['loginId'])
+    del personalData['LoginId']
+    del personalData['UserId']
+    return personalData
 
 
 @app.route('/{}/api/login'.format(ver), methods=['POST'])
@@ -50,19 +47,27 @@ def login():
     token = None
     message = "Login success"
 
-    userData = db.get_loginId_by_account(account)
-    if userData == None:
-        message = "User doesn't exist"
-    else:
-        if userData['password'] == password:
-           token = db.update_user_token(account)
+    userData = db.get_loginInfo_by_account(account)
 
-    return {
-        'message': message,
-        'data': {
-            'token': token,
-        },
-    }
+    if userData is None:
+        message = "User doesn't exist"
+    elif userData['password'] != password:
+        message = "Incorrect password"
+    else:
+        token = db.update_user_token(account)
+        personalData = db.get_personalInfo_by_loginId(userData['loginId'])
+
+        del personalData['LoginId']
+        del personalData['UserId']
+
+        resp = make_response({
+            'message': message,
+        })
+        resp.set_cookie('user_info', json.dumps(personalData), httponly=False)
+        resp.set_cookie('token', token, httponly=False)
+        return resp
+
+    return jsonify({'message': message}), 401
 
 
 @app.route('/{}/api/register'.format(ver), methods=['POST'])
@@ -70,7 +75,7 @@ def register():
     message = 'Create success'
     data = request.get_json()['data']
     print(data)
-    userData = db.get_loginId_by_account(data['account'])
+    userData = db.get_loginInfo_by_account(data['account'])
     if userData:
         message = "User already existed"
     else:

@@ -6,7 +6,9 @@ from getToken import getToken
 app = Flask(__name__)
 mysql = MySQL(app)
 
-#for test only
+# for test only
+
+
 def get_user_table():
     try:
         cursor = mysql.connection.cursor()
@@ -27,11 +29,34 @@ def get_user_table():
         if 'cursor' in locals():
             cursor.close()
 
-def get_loginId_by_account(account):
+
+def get_loginInfo_by_account(account):
     try:
         cursor = mysql.connection.cursor()
         query = "SELECT * FROM `logininfo` WHERE `account` = %s;"
         cursor.execute(query, (account,))
+        row = cursor.fetchone()
+
+        if row:
+            columns = [desc[0] for desc in cursor.description]
+            user_data = dict(zip(columns, row))
+            return user_data
+        else:
+            return None
+
+    except Exception as e:
+        return {"Error": str(e)}
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_personalInfo_by_loginId(loginId):
+    try:
+        cursor = mysql.connection.cursor()
+        query = "SELECT * FROM `personalinfo` WHERE `loginId` = %s;"
+        cursor.execute(query, (loginId,))
         row = cursor.fetchone()
 
         if row:
