@@ -55,15 +55,12 @@ def login():
         message = "Incorrect password"
     else:
         token = db.update_user_token(account)
-        personalData = db.get_personalInfo_by_loginId(userData['loginId'])
-
-        del personalData['LoginId']
-        del personalData['UserId']
+        
 
         resp = make_response({
             'message': message,
         })
-        resp.set_cookie('user_info', json.dumps(personalData), httponly=False)
+        
         resp.set_cookie('token', token, httponly=False)
         return resp
 
@@ -88,10 +85,32 @@ def register():
 
 @app.route('/{}/api/getUser'.format(ver), methods=['GET'])
 def getUser():
-    status = None
-    account = request.get_json()['account']
+    auth_header = request.headers.get('Authorization')
 
-    return account
+    if auth_header:
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            if(db.check_valid_Token(token)):
+                personalData = db.get_personalInfo_by_token(token)
+                resp = make_response({
+                    'message': 'get User Successfully',
+                })
+
+                del personalData['token']
+                del personalData['password']
+
+                resp.set_cookie('user_info', json.dumps(personalData), httponly=False)
+                return resp
+
+            return jsonify({'message': 'Old Token or Invalid Token', 'token': token}), 200
+        else:
+            # If the Authorization header does not start with 'Bearer '
+            return jsonify({'error': 'Invalid authorization header'}), 401
+    else:
+        # If no Authorization header is present in the request
+        return jsonify({'error': 'Authorization header missing'}), 401
+
+    return
 
 
 if __name__ == '__main__':
