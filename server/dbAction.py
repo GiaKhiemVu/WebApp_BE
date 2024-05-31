@@ -6,6 +6,7 @@ from getToken import getToken
 app = Flask(__name__)
 mysql = MySQL(app)
 
+
 def get_loginInfo_by_account(account):
     try:
         cursor = mysql.connection.cursor()
@@ -27,6 +28,7 @@ def get_loginInfo_by_account(account):
         if cursor:
             cursor.close()
 
+
 def get_personalInfo_by_loginId(loginId):
     try:
         cursor = mysql.connection.cursor()
@@ -47,6 +49,7 @@ def get_personalInfo_by_loginId(loginId):
     finally:
         if cursor:
             cursor.close()
+
 
 def get_personalInfo_by_token(token):
     try:
@@ -73,6 +76,7 @@ def get_personalInfo_by_token(token):
         if cursor:
             cursor.close()
 
+
 def get_loginInfo_by_token(token):
     try:
         cursor = mysql.connection.cursor()
@@ -93,6 +97,7 @@ def get_loginInfo_by_token(token):
     finally:
         if cursor:
             cursor.close()
+
 
 def create_new_user(userData):
     try:
@@ -115,16 +120,17 @@ def create_new_user(userData):
         cursor.execute(insertInfo, (login_id, userData['firstName'], userData['lastName'],
                                     userData['email']))
 
-        mysql.connection.commit() 
+        mysql.connection.commit()
         print("Create success")
 
     except Exception as e:
-        mysql.connection.rollback()  
+        mysql.connection.rollback()
         print("Error:", e)
 
     finally:
         if cursor:
             cursor.close()
+
 
 def update_user_token(account):
     token = getToken(account)
@@ -144,6 +150,7 @@ def update_user_token(account):
         if 'cursor' in locals():
             cursor.close()
 
+
 def check_valid_Token(token):
     try:
         cursor = mysql.connection.cursor()
@@ -155,6 +162,81 @@ def check_valid_Token(token):
             return True
         else:
             return False
+
+    except Exception as e:
+        return {"Error": str(e)}
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_full_user_info():
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+                SELECT * 
+                FROM `PersonalInfo` 
+                INNER JOIN `loginInfo` ON PersonalInfo.loginId = loginInfo.loginId
+                """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if rows:
+            user_data = []
+            columns = [desc[0] for desc in cursor.description]
+            for row in rows:
+                user_data.append(dict(zip(columns, row)))
+            return user_data
+        else:
+            return None
+
+    except Exception as e:
+        return {"Error": str(e)}
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_product():
+    try:
+        cursor = mysql.connection.cursor()
+        query = "SELECT * FROM `Product`"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if rows:
+            user_data = []
+            columns = [desc[0] for desc in cursor.description]
+            for row in rows:
+                user_data.append(dict(zip(columns, row)))
+            return user_data
+        else:
+            return None
+
+    except Exception as e:
+        return {"Error": str(e)}
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_all_table_data(table_name):
+    try:
+        cursor = mysql.connection.cursor()
+        query = f"SELECT * FROM `{table_name}`;"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        table_data = []
+        for row in rows:
+            columns = [desc[0] for desc in cursor.description]
+            row_data = dict(zip(columns, row))
+            table_data.append(row_data)
+
+        return table_data
 
     except Exception as e:
         return {"Error": str(e)}

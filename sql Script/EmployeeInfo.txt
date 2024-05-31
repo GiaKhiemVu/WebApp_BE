@@ -1,8 +1,0 @@
-CREATE TABLE employeeInfo (
-    Eid INT AUTO_INCREMENT PRIMARY KEY,
-    Department VARCHAR(50),
-    LoginId INT,
-    Wage DECIMAL(10, 2),
-    Role VARCHAR(50),
-    FOREIGN KEY (LoginId) REFERENCES loginInfo(loginId)
-);

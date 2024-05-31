@@ -23,11 +23,14 @@ CORS(app, supports_credentials=True)
 
 mysql = MySQL(app)
 
+# Test section
+#######################################################################################
 
-@app.route('/{}/api/database'.format(ver), methods=['GET'])
-def database():
-    tables_json = db.get_user_table()
-    return jsonify({'tables': tables_json})
+
+@app.route('/{}/api/test/<arg>'.format(ver), methods=['GET'])
+def database(arg):
+    tables_json = db.get_all_table_data(arg)
+    return jsonify({'data': tables_json})
 
 
 @app.route('/{}/api/token'.format(ver), methods=['GET'])
@@ -37,6 +40,7 @@ def token():
     del personalData['LoginId']
     del personalData['UserId']
     return personalData
+#######################################################################################
 
 
 @app.route('/{}/api/login'.format(ver), methods=['POST'])
@@ -55,12 +59,11 @@ def login():
         message = "Incorrect password"
     else:
         token = db.update_user_token(account)
-        
 
         resp = make_response({
             'message': message,
         })
-        
+
         resp.set_cookie('token', token, httponly=False)
         return resp
 
@@ -90,16 +93,18 @@ def getUser():
     if auth_header:
         if auth_header.startswith('Bearer '):
             token = auth_header.split(' ')[1]
-            if(db.check_valid_Token(token)):
+            if db.check_valid_Token(token):
                 personalData = db.get_personalInfo_by_token(token)
-                resp = make_response({
-                    'message': 'get User Successfully',
-                })
-
                 del personalData['token']
                 del personalData['password']
+                resp = make_response({
+                    'message': 'User data retrieved successfully',
+                    'user': personalData  # Include user data in the response
+                })
 
-                resp.set_cookie('user_info', json.dumps(personalData), httponly=False)
+                # Set user data in a cookie named 'user_info'
+                resp.set_cookie('user_info', json.dumps(
+                    personalData), httponly=False)
                 return resp
 
             return jsonify({'message': 'Old Token or Invalid Token', 'token': token}), 200
@@ -110,7 +115,53 @@ def getUser():
         # If no Authorization header is present in the request
         return jsonify({'error': 'Authorization header missing'}), 401
 
-    return
+
+@app.route('/{}/api/getFullUserInfo'.format(ver), methods=['GET'])
+def getFullUserInfo():
+    auth_header = request.headers.get('Authorization')
+
+    if auth_header:
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            if db.check_valid_Token(token):
+                data = db.get_full_user_info()
+                res = make_response({
+                    'message': 'Get data success!',
+                    'data': data
+                })
+                return res
+
+            return jsonify({'error': 'Authorization expired header'}), 401
+        else:
+            # If the Authorization header does not start with 'Bearer '
+            return jsonify({'error': 'Invalid authorization header'}), 401
+    else:
+        # If no Authorization header is present in the request
+        return jsonify({'error': 'Authorization header missing'}), 401
+
+
+@app.route('/{}/api/getProduct'.format(ver), methods=['GET'])
+def getProduct():
+    auth_header = request.headers.get('Authorization')
+
+    if auth_header:
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            if db.check_valid_Token(token):
+                data = db.get_product()
+                res = make_response({
+                    'message': 'Get data success!',
+                    'data': data
+                })
+                return res
+
+            return jsonify({'error': 'Authorization expired header'}), 401
+        else:
+            # If the Authorization header does not start with 'Bearer '
+            return jsonify({'error': 'Invalid authorization header'}), 401
+    else:
+        # If no Authorization header is present in the request
+        return jsonify({'error': 'Authorization header missing'}), 401
 
 
 if __name__ == '__main__':
