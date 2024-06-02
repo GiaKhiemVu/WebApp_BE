@@ -1,0 +1,7 @@
+CREATE TABLE Cart (
+    UserId INT NOT NULL,
+    OrderId INT NOT NULL,
+    PRIMARY KEY (UserId, OrderId),
+    FOREIGN KEY (OrderId) REFERENCES `order`(OrderId),
+    FOREIGN KEY (UserId) REFERENCES PersonalInfo(UserId)
+);

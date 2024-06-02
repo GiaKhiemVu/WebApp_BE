@@ -1,7 +1,0 @@
-CREATE TABLE `Order` (
-    Oid INT AUTO_INCREMENT PRIMARY KEY,
-    Eid INT,
-    userId INT,
-    FOREIGN KEY (Eid) REFERENCES employeeInfo(Eid),
-    FOREIGN KEY (UserId) REFERENCES PersonalInfo(UserId)
-);
