@@ -1,8 +1,0 @@
-CREATE TABLE loginInfo (
-    loginId INT AUTO_INCREMENT PRIMARY KEY,
-    account VARCHAR(50) NOT NULL,
-    password CHAR(32) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user',
-    status VARCHAR(50) DEFAULT 'open',
-    token VARCHAR(255)
-);

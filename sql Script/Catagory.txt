@@ -1,5 +1,0 @@
-CREATE TABLE Category (
-    categoryId INT AUTO_INCREMENT PRIMARY KEY,
-    main VARCHAR(50) NOT NULL,
-    sub VARCHAR(50) NOT NULL,
-);

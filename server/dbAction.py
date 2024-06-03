@@ -252,7 +252,8 @@ def get_product_by_id(id):
             product_data = dict(zip(columns, row))
             if product_data.get("Image") is not None:
                 # Convert the binary image data to base64-encoded string
-                product_data["Image"] = base64.b64encode(product_data["Image"]).decode("utf-8")
+                product_data["Image"] = base64.b64encode(
+                    product_data["Image"]).decode("utf-8")
             return product_data
         else:
             return None
@@ -493,3 +494,91 @@ def get_all_table_data(table_name):
     finally:
         if cursor:
             cursor.close()
+
+
+def add_product(product):
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        INSERT INTO Product (name, price, categoryId, cooktime)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(
+            query, (product['name'], product['price'], product['categoryId'], product['cooktime']))
+        mysql.connection.commit()
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error adding product: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def update_product(product):
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        UPDATE Product SET name=%s, price=%s, categoryId=%s, cooktime=%s, description=%s, recommend=%s, status=%s
+        WHERE Pid=%s
+        """
+        cursor.execute(
+            query, (product['name'], product['price'], product['categoryId'], product['cooktime'],  product['description'], product['recommend'], str(product['status']), product['Pid']))
+        mysql.connection.commit()
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error updating product: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def delete_product(product):
+    try:
+        print(1)
+        cursor = mysql.connection.cursor()
+        query = "DELETE FROM `Product` WHERE Pid=%s"
+        cursor.execute(query, (product['Pid'],))
+        print(2)
+        mysql.connection.commit()
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error deleting product: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def renew_product(data):
+    for product in data['added']:
+        add_product(product)
+    for product in data['updated']:
+        update_product(product)
+    for product in data['deleted']:
+        delete_product(product)
+
+
+def add_to_cart(data, id):
+    try:
+        cursor = mysql.connection.cursor()
+
+        # Extract Pid and quantity from data
+        Pid = data['Pid']
+        quantity = data['quantity']
+
+        # Insert the order into the order table
+        cursor.execute(
+            "INSERT INTO `order` (Pid, quantity) VALUES (%s, %s)", (Pid, quantity))
+        mysql.connection.commit()
+
+        # Get the OrderID of the inserted order
+        OrderID = cursor.lastrowid
+
+        # Insert the OrderID and userId into the cart table
+        cursor.execute(
+            "INSERT INTO cart (UserId, OrderId) VALUES (%s, %s)", (id, OrderID))
+        mysql.connection.commit()
+
+        return {"message": "Product added to cart successfully", "OrderId": OrderID}, 200
+
+    except Exception as e:
+        return {"error": str(e)}, 500

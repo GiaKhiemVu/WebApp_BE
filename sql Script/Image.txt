@@ -1,6 +1,0 @@
-CREATE TABLE Image (
-    imageID INT AUTO_INCREMENT PRIMARY KEY,
-    Image LONGBLOB, -- Đây là kiểu dữ liệu cho hình ảnh, tùy thuộc vào loại cơ sở dữ liệu bạn đang sử dụng
-    Pid INT,
-    FOREIGN KEY (Pid) REFERENCES Product(Pid)
-);

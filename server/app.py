@@ -76,7 +76,6 @@ def login():
 def register():
     message = 'Create success'
     data = request.get_json()['data']
-    print(data)
     userData = db.get_loginInfo_by_account(data['account'])
     if userData:
         message = "User already existed"
@@ -193,22 +192,24 @@ def getProductByRecommend(type):
 
     return res
 
-@app.route('/{}/api/addProduct'.format(ver), methods=['POST'])
+@app.route('/{}/api/renewProduct'.format(ver), methods=['POST'])
 def addProduct():
     auth_header = request.headers.get('Authorization')
-
     validate.validateToken(auth_header)
-    
+    data = request.get_json()['data']
+    print(data)
     try:
-        print("abc")
-
+        db.renew_product(data)
+        return jsonify({"message": "Update success"}), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"message": "error on change data"}), 500
 
 
 @app.route('/{}/api/createImg'.format(ver), methods=['POST'])
 def createImg():
+    auth_header = request.headers.get('Authorization')
+    validate.validateToken(auth_header)
     try:
         data = request.get_json()['data']
 
@@ -224,6 +225,20 @@ def createImg():
         print("Error:", e)
         return jsonify({'message': 'Error processing request', 'error': str(e)}), 500
 
+
+@app.route('/{}/api/addCart/<id>'.format(ver), methods=['POST'])
+def addCart(id):
+    auth_header = request.headers.get('Authorization')
+    validate.validateToken(auth_header)
+    data = request.get_json()['data']
+    print(data)
+    try:
+        response, status_code = db.add_to_cart(data, id)
+
+        return jsonify(response), status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
